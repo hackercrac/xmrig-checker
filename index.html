@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XMRig Mobile Compatibility & Config Generator</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --card: #1e293b;
+      --panel: #0f172a;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #f97316;
+      --accent-hover: #ea580c;
+      --green: #22c55e;
+      --yellow: #eab308;
+      --red: #ef4444;
+    }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .container {
+      background: var(--card);
+      max-width: 540px;
+      width: 100%;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+      border: 1px solid var(--border);
+    }
+    h1 { font-size: 1.45rem; margin: 0 0 6px; }
+    p.sub { color: var(--muted); font-size: 0.9rem; margin: 0 0 20px; line-height: 1.4; }
+    .spec-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .spec-box {
+      background: var(--panel);
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .spec-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .spec-val { font-size: 1rem; font-weight: 700; margin-top: 4px; word-break: break-word; }
+    button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: var(--accent);
+      color: white;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+    }
+    button:hover:not(:disabled) { background: var(--accent-hover); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .verdict {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 12px;
+      display: none;
+      line-height: 1.5;
+      font-size: 0.9rem;
+    }
+    .verdict.pass { background: rgba(34, 197, 94, 0.12); border: 1px solid var(--green); }
+    .verdict.warn { background: rgba(234, 179, 8, 0.12); border: 1px solid var(--yellow); }
+    .verdict.fail { background: rgba(239, 68, 68, 0.12); border: 1px solid var(--red); }
+    .verdict h3 { margin: 0 0 8px; font-size: 1.1rem; }
+    .verdict ul { margin: 0; padding-left: 18px; }
+    .verdict li { margin-bottom: 6px; }
+
+    /* Config Generator Section */
+    .config-section {
+      display: none;
+      margin-top: 22px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+    .config-section h2 { font-size: 1.15rem; margin: 0 0 12px; }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 5px; }
+    .field input, .field select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 14px 0 6px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .copy-btn {
+      width: auto;
+      padding: 6px 12px;
+      font-size: 0.78rem;
+      background: #334155;
+      border-radius: 6px;
+    }
+    .copy-btn:hover { background: #475569; }
+    pre {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.78rem;
+      overflow-x: auto;
+      margin: 0;
+      color: #e2e8f0;
+      line-height: 1.45;
+    }
+    .disclaimer {
+      margin-top: 18px;
+      font-size: 0.76rem;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>XMRig Phone Compatibility</h1>
+    <p class="sub">Checks OS, CPU architecture, threads, RAM, and compute speed to see if your device can run XMRig.</p>
+
+    <div class="spec-grid">
+      <div class="spec-box">
+        <div class="spec-label">Operating System</div>
+        <div class="spec-val" id="os-val">Detecting...</div>
+      </div>
+      <div class="spec-box">
+        <div class="spec-label">CPU Architecture</div>
+        <div class="spec-val" id="arch-val">Detecting...</div>
+      </div>
+      <div class="spec-box">
+        <div class="spec-label">Logical Cores</div>
+        <div class="spec-val" id="cores-val">Detecting...</div>
+      </div>
+      <div class="spec-box">
+        <div class="spec-label">Estimated RAM</div>
+        <div class="spec-val" id="ram-val">Detecting...</div>
+      </div>
+      <div class="spec-box" style="grid-column: span 2;">
+        <div class="spec-label">GPU / SoC Renderer</div>
+        <div class="spec-val" id="gpu-val" style="font-size: 0.85rem;">Detecting...</div>
+      </div>
+    </div>
+
+    <button id="scan-btn" onclick="runBenchmark()">Run Compatibility & CPU Test</button>
+
+    <div id="verdict-box" class="verdict"></div>
+
+    <!-- Auto-Tuned Setup & Config Generator -->
+    <div id="config-section" class="config-section">
+      <h2>Auto-Tuned Setup Generator</h2>
+      <p class="sub" style="margin-bottom: 14px;">Pre-configured for your phone's safe thermal thread limit (<span id="safe-threads-label">4</span> threads).</p>
+
+      <div class="field">
+        <label>Monero (XMR) Wallet Address</label>
+        <input type="text" id="wallet-input" placeholder="4... or 8... (Paste your XMR address)" oninput="updateOutputs()" />
+      </div>
+
+      <div class="field">
+        <label>Mining Pool</label>
+        <select id="pool-select" onchange="updateOutputs()">
+          <option value="gulf.moneroocean.stream:10128">MoneroOcean (Algo-switching — Best for Phones)</option>
+          <option value="pool.supportxmr.com:443">SupportXMR (TLS Port 443)</option>
+          <option value="xmr-eu1.nanopool.org:14433">Nanopool EU (TLS Port 14433)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Worker Name</label>
+        <input type="text" id="worker-input" value="android-phone" oninput="updateOutputs()" />
+      </div>
+
+      <div class="code-header">
+        <span>1. Termux One-Line Build & Run Script</span>
+        <button class="copy-btn" onclick="copyText('termux-code', this)">Copy Script</button>
+      </div>
+      <pre id="termux-code"></pre>
+
+      <div class="code-header">
+        <span>2. Optimized config.json</span>
+        <button class="copy-btn" onclick="copyText('json-code', this)">Copy JSON</button>
+      </div>
+      <pre id="json-code"></pre>
+    </div>
+
+    <div class="disclaimer">
+      Warning: Sustained 100% CPU load causes heavy heat and battery wear. Always monitor battery temperature and keep threads capped.
+    </div>
+  </div>
+
+  <script>
+    const specs = {
+      os: "Unknown",
+      isAndroid: false,
+      isIOS: false,
+      arch: "Unknown",
+      cores: navigator.hardwareConcurrency || 4,
+      ram: navigator.deviceMemory || null,
+      gpu: "Unknown",
+      safeThreads: 4,
+      lightMode: false
+    };
+
+    async function detectSpecs() {
+      const ua = navigator.userAgent;
+
+      if (/Android/i.test(ua)) {
+        specs.os = "Android";
+        specs.isAndroid = true;
+      } else if (/iPhone|iPad|iPod/i.test(ua)) {
+        specs.os = "iOS";
+        specs.isIOS = true;
+      } else if (/Windows|Mac|Linux/i.test(ua)) {
+        specs.os = "Desktop / Linux";
+      }
+
+      if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+        try {
+          const uaData = await navigator.userAgentData.getHighEntropyValues(["architecture", "bitness"]);
+          specs.arch = `${uaData.architecture || "ARM"} (${uaData.bitness || "64"}-bit)`;
+        } catch (e) {}
+      }
+      if (specs.arch === "Unknown") {
+        if (/aarch64|arm64|armv8/i.test(ua)) specs.arch = "ARM64 (v8a)";
+        else if (/armv7|armeabi/i.test(ua)) specs.arch = "ARM32 (v7a)";
+        else if (/x86_64|Win64|WOW64/i.test(ua)) specs.arch = "x86_64";
+        else specs.arch = specs.isAndroid ? "Likely ARM64" : "ARM64";
+      }
+
+      try {
+        const canvas = document.createElement("canvas");
+        const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+        if (gl) {
+          const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+          if (debugInfo) {
+            specs.gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+          }
+        }
+      } catch (e) {}
+
+      // Reserve 2 cores for Android OS to avoid overheating/freezing
+      specs.safeThreads = Math.max(2, specs.cores - 2);
+      specs.lightMode = Boolean(specs.ram && specs.ram < 4);
+
+      document.getElementById("os-val").textContent = specs.os;
+      document.getElementById("arch-val").textContent = specs.arch;
+      document.getElementById("cores-val").textContent = `${specs.cores} Threads`;
+      document.getElementById("ram-val").textContent = specs.ram ? `~${specs.ram} GB+` : "Restricted by Browser";
+      document.getElementById("gpu-val").textContent = specs.gpu;
+    }
+
+    async function runBenchmark() {
+      const btn = document.getElementById("scan-btn");
+      const box = document.getElementById("verdict-box");
+      const configSec = document.getElementById("config-section");
+
+      btn.disabled = true;
+      btn.textContent = "Benchmarking CPU (1.5 seconds)...";
+      box.style.display = "none";
+      configSec.style.display = "none";
+
+      await new Promise(r => setTimeout(r, 80));
+
+      // 1.5s ALU + scratchpad memory-mixing benchmark
+      const buf = new Uint32Array(65536);
+      for (let i = 0; i < buf.length; i++) buf[i] = i * 2654435761;
+
+      let ops = 0;
+      let acc = 0x12345678;
+      const start = performance.now();
+      while (performance.now() - start < 1500) {
+        for (let i = 0; i < 4096; i++) {
+          const idx = (acc ^ i) & 65535;
+          acc = Math.imul(acc ^ buf[idx], 0x5bd1e995) >>> 0;
+          buf[idx] = acc ^ (acc >>> 15);
+        }
+        ops += 4096;
+      }
+      const elapsed = (performance.now() - start) / 1000;
+      const singleCoreScore = Math.round((ops / elapsed) / 100000);
+
+      let status = "pass";
+      let title = "";
+      let details = [];
+      let compatible = true;
+
+      if (specs.isIOS) {
+        compatible = false;
+        status = "fail";
+        title = "Not Supported on iOS";
+        details.push("Apple restricts background terminal processes and unsigned ARM64 binaries.");
+        details.push("XMRig requires an Android device (via Termux) or a desktop/Linux machine.");
+      } else if (specs.arch.includes("ARM32")) {
+        compatible = false;
+        status = "fail";
+        title = "Incompatible 32-Bit CPU";
+        details.push("RandomX requires a 64-bit (arm64-v8a) processor.");
+      } else {
+        if (specs.lightMode) {
+          status = "warn";
+          title = "Compatible (RandomX Light Mode)";
+          details.push(`Low RAM detected (~${specs.ram} GB). Full RandomX needs ~2.5 GB free RAM, so your config below automatically enables Light Mode (~256 MB RAM).`);
+        } else if (specs.cores < 6 || singleCoreScore < 450) {
+          status = "warn";
+          title = "Compatible (Entry-Level CPU)";
+          details.push("XMRig will run via Termux, though older/budget cores will produce modest hashrates.");
+        } else {
+          status = "pass";
+          title = "Compatible — Ready for XMRig";
+          details.push("64-bit ARM architecture, solid multi-core count, and strong compute speed detected.");
+        }
+
+        const estHashrate = Math.round((singleCoreScore * Math.min(specs.cores, 8)) * 0.22);
+        details.push(`<strong>CPU Compute Score:</strong> ${singleCoreScore} pts`);
+        details.push(`<strong>Estimated Hashrate:</strong> ~${estHashrate} – ${Math.round(estHashrate * 1.3)} H/s`);
+        details.push(`<strong>Thermal Thread Cap:</strong> ${specs.safeThreads} of ${specs.cores} threads recommended.`);
+      }
+
+      box.className = `verdict ${status}`;
+      box.innerHTML = `<h3>${title}</h3><ul>${details.map(d => `<li>${d}</li>`).join("")}</ul>`;
+      box.style.display = "block";
+
+      if (compatible) {
+        document.getElementById("safe-threads-label").textContent = specs.safeThreads;
+        updateOutputs();
+        configSec.style.display = "block";
+      }
+
+      btn.disabled = false;
+      btn.textContent = "Re-Run Compatibility Test";
+    }
+
+    function updateOutputs() {
+      const wallet = document.getElementById("wallet-input").value.trim() || "YOUR_MONERO_WALLET_ADDRESS";
+      const pool = document.getElementById("pool-select").value;
+      const worker = document.getElementById("worker-input").value.trim() || "android-phone";
+      const useTls = pool.endsWith(":443") || pool.endsWith(":14433");
+
+      const termuxScript = `pkg update && pkg upgrade -y
+pkg install git build-essential cmake libuv openssl hwloc -y
+git clone https://github.com/xmrig/xmrig.git
+mkdir xmrig/build && cd xmrig/build
+cmake .. -DWITH_HWLOC=ON
+make -j${specs.safeThreads}
+./xmrig -o ${pool} -u ${wallet} -p ${worker} -t ${specs.safeThreads}${useTls ? " --tls" : ""}`;
+
+      const threadArray = Array.from({ length: specs.safeThreads }, (_, i) => i);
+      const configJson = {
+        autosave: true,
+        cpu: {
+          enabled: true,
+          "huge-pages": false,
+          "hw-aes": true,
+          priority: 1,
+          "memory-pool": false,
+          rx: threadArray
+        },
+        randomx: {
+          mode: specs.lightMode ? "light" : "auto",
+          "1gb-pages": false
+        },
+        pools: [
+          {
+            url: pool,
+            user: wallet,
+            pass: worker,
+            keepalive: true,
+            tls: useTls
+          }
+        ]
+      };
+
+      document.getElementById("termux-code").textContent = termuxScript;
+      document.getElementById("json-code").textContent = JSON.stringify(configJson, null, 2);
+    }
+
+    function copyText(elementId, btn) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = "Copied!";
+        setTimeout(() => { btn.textContent = orig; }, 1500);
+      });
+    }
+
+    detectSpecs();
+  </script>
+</body>
+</html>

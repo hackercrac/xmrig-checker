@@ -1,2 +1,8 @@
-# xmrig-checker
-Web-based mobile hardware checker, CPU benchmark, and auto-tuned Termux config generator for XMRig.
+# XMRig Phone Compatibility Checker
+
+A zero-dependency, client-side web tool that detects smartphone hardware specs (OS, 64-bit ARM architecture, thread count, RAM, and SoC) and runs a 1.5-second CPU compute benchmark to check XMRig compatibility and generate an auto-tuned Termux setup.
+
+## Features
+- **Instant Hardware Detection:** Identifies Android vs. iOS, 32-bit vs. 64-bit hints, logical CPU cores, estimated RAM, and GPU/SoC renderer.
+- **Live Compute Benchmark:** Measures integer and memory-mix operations to estimate RandomX readiness.
+- **Auto-Tuned Config Generator:** Outputs a custom Termux compile command and `config.json` with safe thermal thread limits and automatic Light Mode for sub-4GB RAM devices.
