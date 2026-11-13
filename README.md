@@ -1,3 +1,9 @@
+Live URL: https://hackercrac.github.io/xmrig-checker/
+
+           ###DESCRIPTION###
+ This a mobile compatibility and configuration helper that prevents users from blindly crashing or overheating their phones, and auto-generates safe Termux/config.json templates.
+
+ 
 # XMRig Phone Compatibility Checker
 
 A zero-dependency, client-side web tool that detects smartphone hardware specs (OS, 64-bit ARM architecture, thread count, RAM, and SoC) and runs a 1.5-second CPU compute benchmark to check XMRig compatibility and generate an auto-tuned Termux setup.
